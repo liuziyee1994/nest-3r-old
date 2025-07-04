@@ -1,32 +1,57 @@
-import { DynamicModule, Module, Provider, Type } from '@nestjs/common';
+import {
+  DynamicModule,
+  Module,
+  ModuleMetadata,
+  Provider,
+  Type,
+} from '@nestjs/common';
 import {
   getDataSourceToken,
   TypeOrmModule,
   TypeOrmModuleOptions,
 } from '@nestjs/typeorm';
-import { CUSTOM_REPOSITORY_METADATA } from './constants';
+
 import { DataSource, ObjectType } from 'typeorm';
+
+import { Configure } from '@/modules/config/configure';
+import { panic } from '@/modules/core/helpers/command';
+import { UniqueExistConstraint } from '@/modules/database/constraints';
 import { DataExistConstraint } from '@/modules/database/constraints/data.exist.constraint';
-import { UniqueConstraint } from '@/modules/database/constraints/unique.constraint';
-import { UniqueExistConstraint } from '@/modules/database/constraints/unique.exist.constraint';
 import { UniqueTreeConstraint } from '@/modules/database/constraints/tree.unique.constraint';
 import { UniqueTreeExistConstraint } from '@/modules/database/constraints/tree.unique.exist.constraint';
+import { UniqueConstraint } from '@/modules/database/constraints/unique.constraint';
+
+import { DbOptions } from '@/modules/database/types';
+
+import { CUSTOM_REPOSITORY_METADATA } from './constants';
 
 @Module({})
 export class DatabaseModule {
-  // 这里传入的是配置函数(即函数返回的是options),而不是直接传入静态配置
-  static forRoot(configRegister: () => TypeOrmModuleOptions): DynamicModule {
+  static async forRoot(configure: Configure) {
+    if (!configure.has('database')) {
+      panic({ message: 'Database config not exists or not right!' });
+    }
+    const { connections } = await configure.get<DbOptions>('database');
+
+    console.log('数据库配置:', JSON.stringify(connections));
+
+    const imports: ModuleMetadata['imports'] = [];
+    for (const dbOption of connections) {
+      imports.push(TypeOrmModule.forRoot(dbOption as TypeOrmModuleOptions));
+    }
+    const providers: ModuleMetadata['providers'] = [
+      DataExistConstraint,
+      UniqueConstraint,
+      UniqueExistConstraint,
+      UniqueTreeConstraint,
+      UniqueTreeExistConstraint,
+    ];
+
     return {
       global: true,
       module: DatabaseModule,
-      imports: [TypeOrmModule.forRoot(configRegister())],
-      providers: [
-        DataExistConstraint,
-        UniqueConstraint,
-        UniqueExistConstraint,
-        UniqueTreeConstraint,
-        UniqueTreeExistConstraint,
-      ],
+      imports,
+      providers,
     };
   }
 
