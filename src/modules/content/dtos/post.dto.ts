@@ -19,9 +19,9 @@ import { isNil, toNumber } from 'lodash';
 import { DtoValidation } from '@/modules/core/decorators';
 import { toBoolean } from '@/modules/core/helpers';
 
-import { SelectTrashMode } from '@/modules/database/constants';
 import { IsDataExist } from '@/modules/database/constraints';
-import { PaginateOptions } from '@/modules/database/types';
+
+import { PaginateWithTrashedDto } from '@/modules/restful/dtos/paginate-with-trashed.dto';
 
 import { PostOrderType } from '../constants';
 import { CategoryEntity } from '../entities';
@@ -30,23 +30,28 @@ import { CategoryEntity } from '../entities';
  * 文章分页查询验证
  */
 @DtoValidation({ type: 'query' })
-export class QueryPostDto implements PaginateOptions {
-  @IsEnum(SelectTrashMode)
-  @IsOptional()
-  trashed?: SelectTrashMode;
-
-  @IsDataExist(CategoryEntity, {
-    message: '指定的分类不存在',
+export class QueryPostDto extends PaginateWithTrashedDto {
+  /**
+   * 全文搜索
+   */
+  @MaxLength(100, {
+    always: true,
+    message: '搜索字符串长度不得超过$constraint1',
   })
-  @IsUUID(undefined, { message: '分类ID格式错误' })
-  @IsOptional()
-  category?: string;
+  @IsOptional({ always: true })
+  search?: string;
 
+  /**
+   * 是否查询已发布(全部文章:不填、只查询已发布的:true、只查询未发布的:false)
+   */
   @Transform(({ value }) => toBoolean(value))
   @IsBoolean()
   @IsOptional()
   isPublished?: boolean;
 
+  /**
+   * 查询结果排序,不填则综合排序
+   */
   @IsEnum(PostOrderType, {
     message: `排序规则必须是${Object.values(PostOrderType).join(',')}其中一项`,
   })
@@ -65,12 +70,23 @@ export class QueryPostDto implements PaginateOptions {
   @IsOptional()
   limit = 10;
 
-  @MaxLength(100, {
+  /**
+   * 根据分类ID查询此分类及其后代分类下的文章
+   */
+  @IsDataExist(CategoryEntity, {
     always: true,
-    message: '搜索字符串长度不得超过$constraint1',
+    message: '分类不存在',
   })
-  @IsOptional({ always: true })
-  search?: string;
+  @IsUUID(undefined, { message: 'ID格式错误' })
+  @IsOptional()
+  category?: string;
+
+  /**
+   * 根据标签ID查询
+   */
+  @IsUUID(undefined, { message: 'ID格式错误' })
+  @IsOptional()
+  tag?: string;
 }
 
 /**

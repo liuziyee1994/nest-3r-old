@@ -45,11 +45,12 @@ export const createApp = (options: CreateOptions) => async (): Promise<App> => {
     BootModule,
   });
   // 设置api前缀
-  if (app.configure.has('app.prefix')) {
-    app.container.setGlobalPrefix(
-      await app.configure.get<string>('app.prefix'),
-    );
-  }
+  // swagger无法自动读取prefix前缀
+  // if (app.configure.has('app.prefix')) {
+  //   app.container.setGlobalPrefix(
+  //     await app.configure.get<string>('app.prefix'),
+  //   );
+  // }
   // 为class-validator添加容器以便在自定义约束中可以注入dataSource等依赖
   useContainer(app.container.select(BootModule), {
     fallbackOnErrors: true,

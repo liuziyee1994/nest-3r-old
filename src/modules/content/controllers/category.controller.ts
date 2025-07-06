@@ -12,15 +12,21 @@ import {
   ValidationPipe,
 } from '@nestjs/common';
 
+import { ApiTags } from '@nestjs/swagger';
+
+import { ContentModule } from '@/modules/content/content.module';
 import {
   CreateCategoryDto,
   QueryCategoryDto,
   UpdateCategoryDto,
 } from '@/modules/content/dtos/category.dto';
 import { CategoryService } from '@/modules/content/services';
+import { Depends } from '@/modules/restful/decorators/depends.decorator';
 import { DeleteDto } from '@/modules/restful/dtos';
 
 // @UseInterceptors(AppIntercepter)
+@ApiTags('分类操作')
+@Depends(ContentModule)
 @Controller('categories')
 export class CategoryController {
   constructor(protected service: CategoryService) {}

@@ -12,15 +12,21 @@ import {
   ValidationPipe,
 } from '@nestjs/common';
 
+import { ApiTags } from '@nestjs/swagger';
+
+import { ContentModule } from '@/modules/content/content.module';
 import {
   CreateTagDto,
   QueryTagDto,
   UpdateTagDto,
 } from '@/modules/content/dtos/tag.dto';
 import { TagService } from '@/modules/content/services';
+import { Depends } from '@/modules/restful/decorators/depends.decorator';
 import { DeleteDto } from '@/modules/restful/dtos';
 
 // @UseInterceptors(AppIntercepter)
+@ApiTags('标签操作')
+@Depends(ContentModule)
 @Controller('tags')
 export class TagController {
   constructor(protected service: TagService) {}

@@ -9,15 +9,21 @@ import {
   ValidationPipe,
 } from '@nestjs/common';
 
+import { ApiTags } from '@nestjs/swagger';
+
+import { ContentModule } from '@/modules/content/content.module';
 import {
   CreateCommentDto,
   QueryCommentDto,
   QueryCommentTreeDto,
 } from '@/modules/content/dtos/comment.dto';
 import { CommentService } from '@/modules/content/services';
+import { Depends } from '@/modules/restful/decorators/depends.decorator';
 import { DeleteDto } from '@/modules/restful/dtos/delete.dto';
 
 // @UseInterceptors(AppIntercepter)
+@ApiTags('评论操作')
+@Depends(ContentModule)
 @Controller('comments')
 export class CommentController {
   constructor(protected service: CommentService) {}
